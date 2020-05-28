@@ -19,6 +19,16 @@ function cmp_menu_items($a, $b) {
     if ($a['title'] > $b['title']) return 1;
 }
 
+function php_self_to_uri($php_self) {
+    // remove script file name from uri, and return array of parts of uri exploded by '/'
+    $res = explode('/', $php_self);
+    // remove first empty item (before first '/', eg '/foo/bar.php')
+    array_shift($res);
+    // remove script name
+    array_pop($res);
+    return $res;
+}
+
 function is_part_uri($req_uri, $self_uri) {
     $res = true;
     $a_req_uri = explode('/', $req_uri);
@@ -80,13 +90,50 @@ function print_menu() {
     }
 }
 
+function find_menu_item($arr_menu, $url) {
+    foreach ($arr_menu as $item) {
+        if ($item['url'] == $url) {
+            return $item;
+        }
+    }
+    return null;
+}
+
+function echo_bc_item($title, $url, $last) {
+    $class = '';
+    echo('<div itemscope="itemscope" itemtype="http://data-vocabulary.org/Breadcrumb">');
+    if (!$last) {
+        echo('<a class="page" href="'.$url.'" itemprop="url">');
+    }
+    else {
+        $class = 'class="page"';
+    }
+
+    echo('<span itemprop="title" '.$class.'>'.$title.'</span>');
+
+    if (!$last) {
+        echo('</a>');
+    }
+    echo('</div>');
+}
+
 function print_breadcrumbs() {
     global $_main_menu;
-    $a_req_uri = explode('/', $_SERVER['REQUEST_URI']);
-    $cur_level_nemu = $_main_menu[0];
-    foreach ($a_req_uri as $level => $part) {
-        if ($level == 0) continue;
-        //$cur_level_nemu[$part][]
+    $a_req_uri = php_self_to_uri($_SERVER['PHP_SELF']);
+    if (count($a_req_uri) == 0) {
+        // root directory
+        echo_bc_item($_menu_item[0]['title'], '', true);
+    }
+    else {
+        echo_bc_item($_menu_item[0]['title'], '/', false);
+        $cur_level_nemu = $_main_menu[0]['items'];
+        foreach ($a_req_uri as $level => $part) {
+            $menu_item = find_menu_item($cur_level_nemu, $part);
+            if (!$menu_item) break;
+            $last = (count($a_req_uri) -1 == $level);
+            echo_bc_item($menu_item['title'], $menu_item['url'], $last);
+            $cur_level_nemu = $cur_level_nemu['items'];
+        }
     }
 }
 ?>
