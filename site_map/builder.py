@@ -11,30 +11,41 @@ from lxml.html import parse
 from lxml.etree import PI
 
 # config
-SITE_ROOT_DIR = 'C:\\www\\oit.r29.ru'
-#SITE_ROOT_DIR = 'D:\\bakup\\oit.29.ru\\oit.r29.ru_20200526'
+#SITE_ROOT_DIR = 'C:\\www\\oit.r29.ru'
+SITE_ROOT_DIR = 'D:\\bakup\\oit.29.ru\\oit.r29.ru_20200526'
 SITE_INDEXES = 'index.html index.php'
 SITE_EXCLUDE_DIRS = 'spec'
-SITE_RENAME_TO_PHP = False
+SITE_RENAME_TO_PHP = True
 # end config
 
 _result = "$_main_menu = array(\n"
 
+def remove_child_nodes(node):
+    for child in list(node):
+        node.remove(child)
+
 def process_index(path, index, level):
+    # parse dom tree from index html file
     tree = parse(join(path, index))
+    # retrieve a title of page
     #title = tree.getroot().xpath('//*[@class="widget widget-breadcrumbs"]/div/div[last()]/span')[0].text_content()
     title = tree.find('//*[@class="widget widget-breadcrumbs"]/div/div[last()]/span').text_content()
     print('{}{}/{}/ "{}"'.format(level, "\t" * level, basename(path), title))
     if SITE_RENAME_TO_PHP:
+        # insert import clause
         prefix = '../' * level
         tree.find('head').append(PI('php', 'require_once("{}main_menu.php"); ?'.format(prefix)))
+        # replace breadcrumb content with php function call
+        node = tree.find('//div[@class="widget widget-breadcrumbs"]/div')
+        remove_child_nodes(node)
+        node.append(PI('php', 'print_breadcrumbs(); ?'))
+        # replace menu content with php function call
         node = tree.find('//ul[@class="navigation"]')
-        for child in list(node):
-            node.remove(child)
+        remove_child_nodes(node)
         node.append(PI('php', 'print_menu(); ?'))
-
+        # move original file to bakup
         rename(join(path, index), join(path, 'index.orig'))
-
+        # save modified dom tree
         tree.write(join(path, 'index.php'), encoding = 'UTF-8', xml_declaration= True, method= 'html')
     return title
 

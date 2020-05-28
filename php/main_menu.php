@@ -19,11 +19,34 @@ function cmp_menu_items($a, $b) {
     if ($a['title'] > $b['title']) return 1;
 }
 
+function is_part_uri($req_uri, $self_uri) {
+    $res = true;
+    $a_req_uri = explode('/', $req_uri);
+    $a_self_uri = explode('/', $self_uri);
+    if (count($a_req_uri) >= count($a_self_uri)) {
+        foreach ($a_self_uri as $index => $part) {
+            if ($part != $a_req_uri[$index]) {
+                $res = false;
+                break;
+            }
+        }
+    }
+    else {
+        $res = false;
+    }
+    return $res;
+}
+
 function build_menu($parent_url, $menu_item) {
     $title = $menu_item['title'];
     $items = $menu_item['items'];
     $url = $menu_item['url'];
     $arg_class = 'normal';
+
+    if (is_part_uri($_SERVER['REQUEST_URI'], $parent_url.'/'.$url)) {
+        $arg_class = 'selected';
+    }
+
     if (count($items) > 0) {
         $arg_class .= ' navigation-item-expand';
     }
@@ -42,15 +65,28 @@ function build_menu($parent_url, $menu_item) {
     echo_item_end();
 }
 
-function print_menu(){
+function print_menu() {
     global $_main_menu;
-    $root = array_shift($_main_menu);
-    echo_item_begin('normal', '/', $root['title']);
+    //$root = array_shift($_main_menu);
+    $root = $_main_menu[0];
+    $arg_class = 'normal';
+    if ($_SERVER['REQUEST_URI'] == '/' || $_SERVER['REQUEST_URI'] == '') $arg_class = 'selected';
+    echo_item_begin($arg_class, '/', $root['title']);
     echo_item_end();
 
     usort($root['items'], 'cmp_menu_items');
     foreach ($root['items'] as $menu_item) {
         build_menu('', $menu_item);
+    }
+}
+
+function print_breadcrumbs() {
+    global $_main_menu;
+    $a_req_uri = explode('/', $_SERVER['REQUEST_URI']);
+    $cur_level_nemu = $_main_menu[0];
+    foreach ($a_req_uri as $level => $part) {
+        if ($level == 0) continue;
+        //$cur_level_nemu[$part][]
     }
 }
 ?>

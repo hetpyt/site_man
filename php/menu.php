@@ -2,7 +2,7 @@
 $_main_menu = array(
 array(
 	"title" => "Главная",
-	"url" => "oit.r29.ru",
+	"url" => "oit.r29.ru_20200526",
 	"items" => array(
 	array(
 		"title" => "Антикоррупционная деятельность",
