@@ -117,22 +117,32 @@ function echo_bc_item($title, $url, $last) {
     echo('</div>');
 }
 
+function echo_bc_separator() {
+    echo('<span class="separator">&gt;</span>');
+}
+
 function print_breadcrumbs() {
     global $_main_menu;
     $a_req_uri = php_self_to_uri($_SERVER['PHP_SELF']);
-    if (count($a_req_uri) == 0) {
+
+    $max_level = count($a_req_uri);
+    if ($max_level == 0) {
         // root directory
-        echo_bc_item($_menu_item[0]['title'], '', true);
+        echo_bc_item($_main_menu[0]['title'], '', true);
     }
     else {
-        echo_bc_item($_menu_item[0]['title'], '/', false);
-        $cur_level_nemu = $_main_menu[0]['items'];
+        $base_path = str_repeat('../', $max_level);
+        $rel_path = '';
+        echo_bc_item($_main_menu[0]['title'], $base_path, false);
+        $cur_level_nemu_items = $_main_menu[0]['items'];
         foreach ($a_req_uri as $level => $part) {
-            $menu_item = find_menu_item($cur_level_nemu, $part);
+            $menu_item = find_menu_item($cur_level_nemu_items, $part);
             if (!$menu_item) break;
-            $last = (count($a_req_uri) -1 == $level);
-            echo_bc_item($menu_item['title'], $menu_item['url'], $last);
-            $cur_level_nemu = $cur_level_nemu['items'];
+            echo_bc_separator();
+            $rel_path .= $menu_item['url'].'/';
+            $last = ($max_level - 1 == $level);
+            echo_bc_item($menu_item['title'], $base_path.$rel_path, $last);
+            $cur_level_nemu_items = $menu_item['items'];
         }
     }
 }

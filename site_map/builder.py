@@ -84,7 +84,7 @@ level = -1
 _result = process_folder(_result, SITE_ROOT_DIR, level)
 _result += ');\n'
 #print(_result)
-with open('php\menu.php', mode = 'w', encoding = 'UTF-8') as fo:
+with open('php\\menu.php', mode = 'w', encoding = 'UTF-8') as fo:
     fo.write('<?\n')
     fo.write(_result)
     fo.write('?>')
