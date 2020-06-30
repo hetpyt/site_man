@@ -12,10 +12,12 @@ from lxml.etree import PI
 
 # config
 #SITE_ROOT_DIR = 'C:\\www\\oit.r29.ru'
-SITE_ROOT_DIR = 'D:\\bakup\\oit.29.ru\\oit.r29.ru_20200526'
+SITE_ROOT_DIR = 'D:\\bakup\\oit.29.ru\\oit.r29.ru_20200601\\spec'
 SITE_INDEXES = 'index.html index.php'
 SITE_EXCLUDE_DIRS = 'spec'
+SITE_MENU_TREE_EXCLUDE_DIRS = ''
 SITE_RENAME_TO_PHP = True
+SITE_CREATE_MENU_PHP = False
 # end config
 
 _result = "$_main_menu = array(\n"
@@ -84,7 +86,8 @@ level = -1
 _result = process_folder(_result, SITE_ROOT_DIR, level)
 _result += ');\n'
 #print(_result)
-with open('php\\menu.php', mode = 'w', encoding = 'UTF-8') as fo:
-    fo.write('<?\n')
-    fo.write(_result)
-    fo.write('?>')
+if SITE_CREATE_MENU_PHP:
+    with open('php\\menu.php', mode = 'w', encoding = 'UTF-8') as fo:
+        fo.write('<?\n')
+        fo.write(_result)
+        fo.write('?>')

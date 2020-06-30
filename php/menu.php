@@ -1,8 +1,9 @@
 <?
+$_js_file_name = 'oit_202006011355';
 $_main_menu = array(
 array(
 	"title" => "Главная",
-	"url" => "oit.r29.ru_20200526",
+	"url" => "oit.r29.ru_20200601",
 	"items" => array(
 	array(
 		"title" => "Антикоррупционная деятельность",
@@ -285,8 +286,14 @@ array(
 			),
 		),
 		array(
+			"title" => "Сведения о вакантных должностях",
+			"url" => "vakansii-prof",
+			"items" => array(
+			),
+		),
+		array(
 			"title" => "Вакантные места для приема (перевода)",
-			"url" => "vakansii",
+			"url" => "vakansii-stud",
 			"items" => array(
 			),
 		),
@@ -305,7 +312,7 @@ array(
 		),
 	),
 	array(
-		"title" => "Новости и события",
+		"title" => "Расписание занятий",
 		"url" => "timetable",
 		"items" => array(
 		),

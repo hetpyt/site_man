@@ -1,6 +1,13 @@
 <?
 require_once('menu.php');
 
+function url_join($lpath, $rpath) {
+    if (strlen($lpath) == 0 && strlen($rpath) == 0) return '';
+    elseif (strlen($lpath) == 0 && strlen($rpath) > 0) return trim($rpath, '/');
+    elseif (strlen($lpath) > 0 && strlen($rpath) == 0) return trim($lpath, '/');
+    else return (trim($lpath, '/').'/'.trim($rpath, '/'));
+}
+
 function echo_item_begin($arg_class, $url, $title) {
     echo('<li class="'.$arg_class.'">');
     echo('<a href="'.$url.'">');
@@ -19,9 +26,9 @@ function cmp_menu_items($a, $b) {
     if ($a['title'] > $b['title']) return 1;
 }
 
-function php_self_to_uri($php_self) {
+function php_self_to_uri() {
     // remove script file name from uri, and return array of parts of uri exploded by '/'
-    $res = explode('/', $php_self);
+    $res = explode('/', $_SERVER['PHP_SELF']);
     // remove first empty item (before first '/', eg '/foo/bar.php')
     array_shift($res);
     // remove script name
@@ -29,9 +36,9 @@ function php_self_to_uri($php_self) {
     return $res;
 }
 
-function is_part_uri($req_uri, $self_uri) {
+function is_part_uri($self_uri) {
     $res = true;
-    $a_req_uri = explode('/', $req_uri);
+    $a_req_uri = php_self_to_uri();
     $a_self_uri = explode('/', $self_uri);
     if (count($a_req_uri) >= count($a_self_uri)) {
         foreach ($a_self_uri as $index => $part) {
@@ -47,27 +54,28 @@ function is_part_uri($req_uri, $self_uri) {
     return $res;
 }
 
-function build_menu($parent_url, $menu_item) {
+function build_menu($back_path, $parent_url, $menu_item) {
     $title = $menu_item['title'];
     $items = $menu_item['items'];
     $url = $menu_item['url'];
     $arg_class = 'normal';
 
-    if (is_part_uri($_SERVER['REQUEST_URI'], $parent_url.'/'.$url)) {
+    $menu_url = url_join($parent_url, $url);
+
+    if (is_part_uri($menu_url)) {
         $arg_class = 'selected';
     }
 
     if (count($items) > 0) {
         $arg_class .= ' navigation-item-expand';
     }
-
-    echo_item_begin($arg_class, $parent_url.'/'.$url.'/', $title);
+    echo_item_begin($arg_class, url_join($back_path, $menu_url).'/', $title);
 
     if (count($items) > 0) {
         echo('<ul>');
         usort($items, 'cmp_menu_items');
         foreach ($items as $i) {
-            build_menu($parent_url.'/'.$url, $i);
+            build_menu($back_path, $menu_url, $i);
         }
         echo('</ul>');
     }
@@ -80,13 +88,24 @@ function print_menu() {
     //$root = array_shift($_main_menu);
     $root = $_main_menu[0];
     $arg_class = 'normal';
-    if ($_SERVER['REQUEST_URI'] == '/' || $_SERVER['REQUEST_URI'] == '') $arg_class = 'selected';
-    echo_item_begin($arg_class, '/', $root['title']);
+    $a_req_uri = php_self_to_uri();
+    $max_level = count($a_req_uri);
+    $spec_url = '';
+    // spec
+    if ($max_level > 0 && $a_req_uri[0] == 'spec') {
+        // array_shift($a_req_uri);
+        // $max_level = count($a_req_uri);
+        $spec_url = '/spec';
+    }
+    $back_path = str_repeat('../', $max_level);
+    if ($max_level == 0 || (strlen($spec_url) > 0 && $max_level == 1)) $arg_class = 'selected';
+    // echo root menu item - Main page
+    echo_item_begin($arg_class, $spec_url.'/', $root['title']);
     echo_item_end();
 
     usort($root['items'], 'cmp_menu_items');
     foreach ($root['items'] as $menu_item) {
-        build_menu('', $menu_item);
+        build_menu($back_path, $spec_url, $menu_item);
     }
 }
 
@@ -123,9 +142,14 @@ function echo_bc_separator() {
 
 function print_breadcrumbs() {
     global $_main_menu;
-    $a_req_uri = php_self_to_uri($_SERVER['PHP_SELF']);
+    $a_req_uri = php_self_to_uri();
 
     $max_level = count($a_req_uri);
+    // spec
+    if ($max_level > 0 && $a_req_uri[0] == 'spec') {
+        array_shift($a_req_uri);
+        $max_level = count($a_req_uri);
+    }
     if ($max_level == 0) {
         // root directory
         echo_bc_item($_main_menu[0]['title'], '', true);
@@ -146,4 +170,26 @@ function print_breadcrumbs() {
         }
     }
 }
+
+function print_js_tag() {
+    global $_js_file_name;
+    $a_req_uri = php_self_to_uri();
+
+    $max_level = count($a_req_uri);
+    // spec
+    if ($max_level > 0 && $a_req_uri[0] == 'spec') {
+        array_shift($a_req_uri);
+        $max_level = count($a_req_uri);
+    }
+    if ($max_level == 0) {
+        $back_path = '';
+    }
+    else {
+        $back_path = str_repeat('../', $max_level);
+    }
+    echo('<script src="'.$back_path.'js/'.$_js_file_name.'.js"></script>');
+}
+
+// echo script tag
+print_js_tag();
 ?>
